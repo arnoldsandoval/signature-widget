@@ -1,18 +1,22 @@
 // Original version from example by CoverMyMeds:
 // https://raw.githubusercontent.com/covermymeds/demo-ehr-rails/master/app/assets/javascripts/signature.js
 (function($) {
-  $.widget("CoverMyMeds.signaturePad", {
-    options: {
-    penColor: "#008", // blue
-    penWidth: 1,
-    canvasSize: {height: 68, width: 386},
-    signaturePadClass: "signature-pad",
-    canvasElement: "<canvas/>",
-    signatureResetClass: "signature-pad-reset",
-    resetElement: "<a href='#'>reset</a>",
-  },
+  var signaturePad = function (options) {
+    options = $.extend({
+      penColor: "#008", // blue
+      penWidth: 1,
+      canvasSize: {height: 68, width: 386},
+      signaturePadClass: "signature-pad",
+      canvasElement: "<canvas/>",
+      signatureResetClass: "signature-pad-reset",
+      resetElement: "<a href='#'>reset</a>",
+    }, options);
+    this.options = options;
+    this._newStroke: 1;
+    this._continueStroke: 0;
+  };
 
-  _create: function(){
+  signaturePad.prototype._create = function(){
     this.signatureInput = $(this.element)
     this.penstate       = false  // is the pen down?
     this.pos            = null   // {x: int, y: int} last pen position
@@ -26,7 +30,7 @@
     this._setupCanvas()
   },
 
-  _replaceInputWithCanvas: function(){
+  signaturePad.prototype._replaceInputWithCanvas = function(){
     this.signatureInput.hide()
     this.signaturePad = $(this.options.canvasElement)
     this.signaturePad.attr("class", this.options.signaturePadClass)
@@ -36,7 +40,7 @@
     this.signatureInput.after(this.signaturePad)
   },
 
-  _addReset: function(){
+  signaturePad.prototype._addReset = function(){
     var widget = this
     var reset = $(this.options.resetElement)
     reset.attr("class", this.options.signatureResetClass)
@@ -47,7 +51,7 @@
     })
   },
 
-  _registerHanders: function(){
+  signaturePad.prototype._registerHanders = function(){
     var signatureSelector = this.options.signatureSelector
 
     this.signaturePad.on("mousedown", $.proxy(this._penDown, this))
@@ -58,7 +62,7 @@
     this.signaturePad.on("touchend", $.proxy(this._penUp, this))
   },
 
-  _setupCanvas: function(){
+  signaturePad.prototype._setupCanvas = function(){
     var signaturePad = this.signaturePad.get(0)
 
     if (typeof G_vmlCanvasManager != "undefined") {
@@ -71,11 +75,11 @@
     this.context.lineWidth = this.options.penWidth
   },
 
-  _savePenStroke: function(isNewStroke){
+  signaturePad.prototype._savePenStroke = function(isNewStroke){
     this.stream.push([isNewStroke, this.pos.x, this.pos.y])
   },
 
-  _penDown: function(event){
+  signaturePad.prototype._penDown = function(event){
     this.penstate = true
     this.pos = this._newEvent(event).penPosition()
     this.context.beginPath()
@@ -85,7 +89,7 @@
     return false  // return false to prevent IE selecting the image
   },
 
-  _penMove: function(event){
+  signaturePad.prototype._penMove = function(event){
     var newPos = this._newEvent(event).penPosition()
 
     if(this.penstate){
@@ -100,13 +104,13 @@
     return false
   },
 
-  _penUp: function(){
+  signaturePad.prototype._penUp = function(){
     this.penstate = false
     this.signatureInput.val(this.toString())
     return false
   },
 
-  _newEvent: function(event){
+  signaturePad.prototype._newEvent = function(event){
     var widget = this
     return {
       crossPlatform: function(){
@@ -126,19 +130,17 @@
     }
   },
 
-  _newStroke: 1,
-  _continueStroke: 0,
-
-  toString: function(){
+  signaturePad.prototype.toString = function(){
     return JSON.stringify(this.stream)
   },
 
-  clearSignature: function(){
+  signaturePad.prototype.clearSignature = function(){
     this.context.clearRect(0, 0, 500, 500)
     this.stream = []
     this.signatureInput.val("")
   }
 
-  })
+
+  $.fn.signaturePad = signaturePad;
 
 }(jQuery));
